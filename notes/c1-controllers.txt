@@ -24,7 +24,7 @@ cats结合装饰器的路径前缀@Get('breed')将为像 . 这样的请求生成
 要做如此修改，才能让该controller被访问到
 @Module({
   imports: [],
-  controllers: [AppController, CatsController],
+  controllers: [AppController, CatController],
   providers: [AppService],
 })
 export class AppModule {}

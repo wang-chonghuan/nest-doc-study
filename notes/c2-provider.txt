@@ -1,0 +1,50 @@
+提供者是 Nest 中的一个基本概念。许多基本的 Nest 类都可以被视为提供者——服务、存储库、工厂、助手等。提供者的主要思想是它可以作为依赖注入；这意味着对象之间可以创建各种关系，并且“连接”对象实例的功能可以在很大程度上委托给 Nest 运行时系统。
+
+providers提供者是在模块中声明的纯 JavaScript 类
+
+要使用 CLI 创建服务，只需执行$ nest g service cats命令即可。
+
+使用了@Injectable()装饰器。装饰@Injectable()器附加元数据，它声明这CatsService是一个可以由 Nest IoC容器管理的类。
+
+在JavaScript中，当一个Promise被reject，或者当一个async函数抛出一个错误时，这个错误需要被处理。否则，这可能会导致“未处理的Promise rejection”这样的问题，这可能导致程序的行为不可预测，或者在某些环境中（如Node.js）可能会导致程序崩溃。
+为了处理这些错误，你可以使用.catch()方法来捕获Promise中的错误，或者在async函数中使用try/catch语句。然而，Nest.js提供了另一种机制：异常过滤器。异常过滤器可以捕获到你的控制器方法中抛出的错误，包括由async函数抛出的错误和rejected Promise。
+但是，如果你的控制器方法不是async函数，那么这个方法抛出的任何错误都不会被转换为rejected Promise，因此也不会被异常过滤器捕获。这就是为什么在这种情况下，即使你的方法并不直接使用await表达式，也建议将它标记为async的原因。
+另外，需要注意的是，将一个函数标记为async并不意味着这个函数本身需要异步操作。实际上，async函数完全可以包含只有同步操作的代码。async关键字的主要目的是允许你在函数内部使用await表达式，并确保函数总是返回一个Promise，无论其内部代码是同步还是异步的。
+
+The CatsService is injected through the class constructor. Notice the use of the private syntax. This shorthand allows us to both declare and initialize the catsService member immediately in the same location.
+
+在 Nest 中，由于 TypeScript 的功能，管理依赖关系非常容易，因为它们只是按类型解析。在下面的示例中，Nest 将catsService通过创建并返回一个实例来解析CatsService（或者，在单例的正常情况下，如果已经在其他地方请求过，则返回现有实例）。此依赖项已解析并传递给控制器​​的构造函数（或分配给指示的属性）：
+constructor(private catsService: CatsService) {}
+
+提供者通常具有与应用程序生命周期同步的生命周期（“作用域”）。启动应用程序时，必须解析每个依赖项，因此必须实例化每个提供程序。同样，当应用程序关闭时，每个提供者都将被销毁。但是，也有一些方法可以使您的提供者生命周期具有请求范围。
+
+Nest 有一个内置的控制反转（“IoC”）容器，可以解决提供者之间的关系。此功能是上述依赖注入功能的基础，但实际上比我们目前所描述的功能强大得多。有几种方法可以定义提供者：您可以使用普通值、类以及异步或同步工厂。
+
+import { Injectable, Optional, Inject } from '@nestjs/common';
+@Injectable()
+export class HttpService<T> {
+  constructor(@Optional() @Inject('HTTP_OPTIONS') private httpClient: T) {}
+}
+@Optional() @Inject()这两个我都不理解
+ChatGPT
+这两个都是装饰器，是 Nest.js 框架中用于处理依赖注入（DI）的关键工具。在 Nest.js 中，依赖注入是一种设计模式，允许类在不用直接创建对象的情况下获取其依赖对象。
+@Inject() 装饰器：这是一个标记性的装饰器，用于告诉 Nest.js 框架这个类需要一个依赖项。装饰器内的参数通常是一个提供者（provider）的令牌（token），Nest.js 将使用这个令牌在其依赖注入容器中寻找相应的提供者，并把它注入到类中。
+在 @Inject('HTTP_OPTIONS') 这个例子中，HTTP_OPTIONS 是自定义的令牌，Nest.js 将使用这个令牌来寻找注册到依赖注入容器中的 HTTP_OPTIONS 提供者。
+@Optional() 装饰器：这个装饰器告诉 Nest.js，如果在依赖注入容器中找不到这个依赖项，不要抛出错误，而是将其设为 null。这在某些情况下是很有用的，例如你的类可以在没有某个依赖项的情况下正常工作，或者可以使用一个默认值替代。
+在 @Optional() @Inject('HTTP_OPTIONS') 这个例子中，如果 Nest.js 在依赖注入容器中找不到 HTTP_OPTIONS 提供者，它将不会抛出错误，而是将 httpClient 设为 null。
+总的来说，@Inject() 和 @Optional() 装饰器都是用来控制类的依赖注入的行为。通过使用这些装饰器，你可以让你的类更加灵活，更好地处理各种情况，例如依赖项不可用或需要使用默认值的情况。
+
+在上面的示例中，我们使用了自定义提供程序，这就是我们包含自定义令牌的原因。前面的示例显示了基于构造函数的注入，指示通过构造函数中的类的依赖关系。
+
+到目前为止，我们使用的技术称为基于构造函数的注入，因为提供者是通过构造函数方法注入的。在某些非常特殊的情况下，基于属性的注入可能会有用。super()例如，如果您的顶级类依赖于一个或多个提供者，那么通过从构造函数中调用子类来向上传递它们可能会非常乏味。为了避免这种情况，您可以@Inject()在属性级别使用装饰器。
+
+如果你的类没有扩展另一个提供者，你应该总是更喜欢使用基于构造函数的注入。
+
+我们通过编辑我们的模块文件 ( app.module.ts) 并将服务添加到装饰器providers的数组来完成此操作@Module()。
+@Module({
+  controllers: [CatsController],
+  providers: [CatsService],
+})
+
+不需要依赖注入的独立nest程序
+https://docs.nestjs.com/standalone-applications
